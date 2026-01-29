@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="dual.client/dual.client.esproj">
+    <Build />
+    <Deploy />
+  </Project>
+  <Project Path="Dual.Server/Dual.Server.csproj" />
+</Solution>
