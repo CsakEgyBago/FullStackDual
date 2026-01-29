@@ -1,4 +1,6 @@
 
+using Dual.Server.Middleware;
+
 namespace Dual.Server
 {
     public class Program
@@ -8,11 +10,14 @@ namespace Dual.Server
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
+            builder.Services.AddAuthenticationServices(builder.Configuration);
 
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
+
+            builder.Services.AddCors();
 
             var app = builder.Build();
 
@@ -26,8 +31,18 @@ namespace Dual.Server
                 app.UseSwaggerUI();
             }
 
-            app.UseAuthorization();
+            app.UseCors(builder =>
+            builder
+            .AllowCredentials()
+            .WithOrigins("http://localhost:3000")
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            );
 
+            app.UseMiddleware<AuthorizationHeaderSetterMiddleware>();
+            app.UseAuthentication();
+            app.UseAuthorization();
+            
 
             app.MapControllers();
 

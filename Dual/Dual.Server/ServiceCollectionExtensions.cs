@@ -1,0 +1,41 @@
+﻿using Dual.Server.Dtos.Options;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+
+namespace Dual.Server
+{
+    public static class ServiceCollectionExtensions
+    {
+        //Extension method
+        public static IServiceCollection AddAuthenticationServices(this IServiceCollection services, IConfiguration configuration)
+        {
+            var jwtConfigSection = configuration.GetSection(nameof(JwtOptions));
+            // Options pattern, inject 
+            services.Configure<JwtOptions>(jwtConfigSection);
+
+            var jwtConfig = jwtConfigSection.Get<JwtOptions>() ?? new JwtOptions(); // ?? ha a bal oldal null akkor a jobb oldal
+
+            services
+                .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(Options =>
+                {
+                    Options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = true,
+                        ValidateAudience = true,
+                        ValidateLifetime = true,
+                        ValidateIssuerSigningKey = true,
+                        ClockSkew = TimeSpan.Zero, // Alapból a lejárat után 5 percig jó
+                        ValidIssuer = jwtConfig.Issuer,
+                        ValidAudience = jwtConfig.Audience,
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtConfig.Key))
+                    };
+                });
+
+            services.AddAuthorization();
+
+            return services;
+        }
+    }
+}
