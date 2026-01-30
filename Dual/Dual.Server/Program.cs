@@ -1,5 +1,7 @@
 
 using Dual.Server.Middleware;
+using Eszi.Demo.Database.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace Dual.Server
 {
@@ -19,7 +21,15 @@ namespace Dual.Server
 
             builder.Services.AddCors();
 
+            builder.Services.AddDbContext<CoreDbContext>(options => 
+                options.UseSqlite(builder.Configuration.GetConnectionString(nameof(CoreDbContext)))
+            );
+
             var app = builder.Build();
+
+            using var scope = app.Services.CreateScope();
+            using var coreDbContext = scope.ServiceProvider.GetRequiredService<CoreDbContext>();
+            coreDbContext.Database.Migrate();
 
             app.UseDefaultFiles();
             app.UseStaticFiles();

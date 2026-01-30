@@ -1,40 +1,57 @@
+import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
+import { axiosInstance } from "../../axios";
+import { queryClient } from "../../main";
 
 export function LoginForm() {
-    const [email, setEmail] = useState<string>("admin");
-    const [password, setPassword] = useState<string>("password");
+  const [email, setEmail] = useState<string>("admin");
+  const [password, setPassword] = useState<string>("password");
 
-    const loginAsync = async () => {};
+  const { mutateAsync: loginAsync } = useMutation({
+    mutationFn: () => {
+      return axiosInstance
+        .post("/auth/login", {
+          email,
+          password,
+        })
+        .then((resp) => resp.data);
+    },
+  });
 
-    return (
-        <>
-        <div>
-            <input
-                type="text"
-                name="email"
-                placeholder="Email"
-                value={email}
-                onChange={(e) => {
-                    setEmail(e.target.value)
-                }}
-            />
-            <input
-                type="password"
-                name="password"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => {
-                    setPassword(e.target.value)
-                }}
-            />
-        </div>
-        <div>
-            <input type="button" onClick={async () => {
-                await loginAsync();
-            }}
-            value="Belépés"
-            />
-        </div>
-        </>
-    );
-}   
+  return (
+    <>
+      <div>
+        <input
+          type="text"
+          name="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => {
+            setEmail(e.target.value);
+          }}
+        />
+      </div>
+      <div>
+        <input
+          type="password"
+          name="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => {
+            setPassword(e.target.value);
+          }}
+        />
+      </div>
+      <div>
+        <input
+          type="button"
+          onClick={async () => {
+            await loginAsync();
+            queryClient.invalidateQueries();
+          }}
+          value="Belépés"
+        />
+      </div>
+    </>
+  );
+}

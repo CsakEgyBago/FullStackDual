@@ -1,14 +1,12 @@
 ﻿using Dual.Server.Dtos.Auth;
 using Dual.Server.Dtos.Options;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using RouteAttribute = Microsoft.AspNetCore.Components.RouteAttribute;
 
 namespace Dual.Server.Controllers
 {
@@ -56,7 +54,7 @@ namespace Dual.Server.Controllers
             {
                 return Unauthorized();
             }
-            return Ok();
+            return Ok(accessToken);
         }
 
         [Authorize]
