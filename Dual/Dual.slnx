@@ -4,4 +4,5 @@
     <Deploy />
   </Project>
   <Project Path="Dual.Server/Dual.Server.csproj" />
+  <Project Path="Eszi.Demo.Database/Eszi.Demo.Database.csproj" Id="b6aab6ca-95df-4310-960c-5a878c159531" />
 </Solution>

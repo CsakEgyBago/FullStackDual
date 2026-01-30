@@ -4,8 +4,8 @@ import { axiosInstance } from "../../axios";
 import { queryClient } from "../../main";
 
 export function LoginForm() {
-  const [email, setEmail] = useState<string>("admin");
-  const [password, setPassword] = useState<string>("password");
+  const [email, setEmail] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
 
   const { mutateAsync: loginAsync } = useMutation({
     mutationFn: () => {

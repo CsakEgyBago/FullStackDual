@@ -1,6 +1,6 @@
 
 using Dual.Server.Middleware;
-using Eszi.Demo.Database.Models;
+using Eszi.Demo.Database;
 using Microsoft.EntityFrameworkCore;
 
 namespace Dual.Server

@@ -1,5 +1,4 @@
-﻿
-namespace Eszi.Demo.Database.Models
+﻿namespace Eszi.Demo.Database.Models
 {
     public class User
     {
@@ -9,5 +8,6 @@ namespace Eszi.Demo.Database.Models
         public required string Password { get; set; }
         public required string FirstName { get; set; }
         public required string LastName { get; set; }
+        public ICollection<UserRole> UserRoles { get; set; } = {};
     }
 }

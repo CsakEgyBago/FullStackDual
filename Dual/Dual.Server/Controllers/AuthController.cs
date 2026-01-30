@@ -1,5 +1,6 @@
 ﻿using Dual.Server.Dtos.Auth;
 using Dual.Server.Dtos.Options;
+using Eszi.Demo.Database;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
@@ -15,16 +16,21 @@ namespace Dual.Server.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IOptions<JwtOptions> options;
-        public AuthController(IOptions<JwtOptions>options)
+        private readonly CoreDbContext coreDbContext;
+
+        public AuthController(IOptions<JwtOptions>options, CoreDbContext coreDbContext)
         {
             this.options = options;
+            this.coreDbContext = coreDbContext;
         }
 
         [HttpPost("Login")]
         [AllowAnonymous]
         public ActionResult Login(LoginRequest request)
         {
-            if(request.Email != "admin" || request.Password != "password")
+            var user = coreDbContext.Users.SingleOrDefault(u => u.Email == request.Email && u.Password == request.Password);
+
+            if (user == null)
             {
                 return Unauthorized();
             }
