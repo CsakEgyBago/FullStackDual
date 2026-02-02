@@ -1,8 +1,12 @@
-﻿using Dual.Server.Dtos.Auth;
+﻿using Dual.Server.Dtos;
+using Dual.Server.Dtos.Auth;
 using Dual.Server.Dtos.Options;
 using Eszi.Demo.Database;
+using Eszi.Demo.Database.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -24,18 +28,51 @@ namespace Dual.Server.Controllers
             this.coreDbContext = coreDbContext;
         }
 
+        [HttpPost("Register")]
+        [AllowAnonymous]
+        public ActionResult Register(UserDto userDto)
+        {
+            var hasher = new PasswordHasher<object>();
+            var passwordHash = hasher.HashPassword(null!, userDto.PasswordHash);
+
+
+            var user = new User
+            {
+                Id = 0,
+                FirstName = userDto.FirstName,
+                LastName = userDto.LastName,
+                Email = userDto.Email,
+                PasswordHash = passwordHash,
+            };
+            coreDbContext.Users.Add(user);
+            coreDbContext.SaveChanges();
+
+            return NoContent();
+        }
+
         [HttpPost("Login")]
         [AllowAnonymous]
         public ActionResult Login(LoginRequest request)
         {
-            var user = coreDbContext.Users.SingleOrDefault(u => u.Email == request.Email && u.Password == request.Password);
+            var user = coreDbContext
+                .Users
+                .Include(u => u.UserRoles)
+                .ThenInclude(ur => ur.Role)
+                .SingleOrDefault(u => u.Email == request.Email);
 
             if (user == null)
             {
                 return Unauthorized();
             }
 
-            var accessToken = GenerateJwtToken(request.Email);
+            var hasher = new PasswordHasher<object>();
+            var result = hasher.VerifyHashedPassword(null!, user.PasswordHash, request.Password);
+            if (result == PasswordVerificationResult.Failed)
+            {
+                return Unauthorized();
+            }
+
+            var accessToken = GenerateJwtToken(user);
 
             var cookieOptions = new CookieOptions
             {
@@ -72,16 +109,19 @@ namespace Dual.Server.Controllers
             return Ok();
         }
 
-        private string GenerateJwtToken(string email)
+        private string GenerateJwtToken(User user)
         {
             var jwt = options.Value;
 
-            var claims = new Claim[]
+            var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.Name, email),
-                new Claim(ClaimTypes.Email, email),
-                new Claim(ClaimTypes.Role, "User"),
+                new Claim(ClaimTypes.Name, user.Email),
+                new Claim(ClaimTypes.Email, user.Email),
+                new("firstName", user.FirstName),
+                new("lastName", user.LastName),
             };
+
+            claims.AddRange(user.UserRoles.Select(ur => new Claim(ClaimTypes.Role, ur.Role.Name)));
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.Key));
 
