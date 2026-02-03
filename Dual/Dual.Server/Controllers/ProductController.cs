@@ -1,6 +1,7 @@
 ﻿using Dual.Server.Dtos;
 using Eszi.Demo.Database;
 using Eszi.Demo.Database.Models;
+using MapsterMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -13,25 +14,20 @@ namespace Dual.Server.Controllers
     public class ProductController : ControllerBase
     {
         private CoreDbContext coreDbContext;
+        private readonly IMapper mapper;
 
-        public ProductController(CoreDbContext coreDbContext)
+        public ProductController(CoreDbContext coreDbContext, IMapper mapper)
         {
             this.coreDbContext = coreDbContext;
+            this.mapper = mapper;
         }
 
-        Func<Product, ProductDto> mapProductToDto = p => new ProductDto
-        {
-            Id = p.Id,
-            Name = p.Name,
-            Price = p.Price,
-            Description = p.Description
-        };
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ProductDto>>> GetAll()
         {
             var products = await coreDbContext.Products.ToListAsync();
-            var mapped = products.Select(mapProductToDto);
+            var mapped = mapper.Map<List<ProductDto>>(products);
             return Ok(mapped);
         }
 
@@ -44,28 +40,21 @@ namespace Dual.Server.Controllers
             {
                 return NotFound();
             }
-            var mapped = mapProductToDto(product);
+            var mapped = mapper.Map<List<ProductDto>>(product);
             return Ok(mapped);
         }
 
-        Func<ProductDto, Product> mapProductDtoToProduct = p => new Product
-        {
-            Id = p.Id,
-            Name = p.Name,
-            Price = p.Price,
-            Description = p.Description
-        };
 
         [HttpPost]
         [Authorize(Roles = BuiltInRoles.Admin)]
         public async Task<ActionResult<Product>> Post(ProductDto product)
         {
-            var mapped = mapProductDtoToProduct(product);
+            var mapped = mapper.Map<Product>(product);
 
             await coreDbContext.Products.AddAsync(mapped);
             await coreDbContext.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetById), new { id = mapped.Id }, mapProductToDto(mapped));
+            return CreatedAtAction(nameof(GetById), new { id = product.Id }, product);
         }
         [HttpDelete("{id:long}")]
         [Authorize(Roles = BuiltInRoles.Admin)]
@@ -83,7 +72,7 @@ namespace Dual.Server.Controllers
 
         [HttpPut]
         [Authorize(Roles = BuiltInRoles.Admin)]
-        public async Task<ActionResult<ProductDto>> Put( ProductDto productDto)
+        public async Task<ActionResult<ProductDto>> Put( ProductDto product)
         {
 
             var existingProduct = await coreDbContext.Products.SingleOrDefaultAsync(p => p.Id == product.Id);
@@ -91,9 +80,13 @@ namespace Dual.Server.Controllers
             {
                 return NotFound();
             }
-            existingProduct.Name = productDto.Name;
-            existingProduct.Description = productDto.Description;
-            existingProduct.Price = productDto.Price;
+
+            var mapped = mapper.Map<Product>(product);
+
+            coreDbContext
+                .Entry(existingProduct)
+                .CurrentValues
+                .SetValues(mapped);
             await coreDbContext.SaveChangesAsync();
 
             return NoContent();

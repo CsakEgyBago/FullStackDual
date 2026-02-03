@@ -5,6 +5,7 @@ import { Layout } from "../Layout/Layout";
 import { AuthenticatedLayout } from "../Layout/AuthenticatedLayout";
 import { AdminLayout } from "../Layout/AdminLayout";
 import { Products } from "../Product/Products";
+import { ProductAdmin } from "../Admin/ProductAdmin";
 
 export const router = createBrowserRouter([
   {
@@ -36,7 +37,7 @@ export const router = createBrowserRouter([
         element: <AdminLayout />,
         children: [
           {
-            element: <div>Product admin</div>,
+            element: <ProductAdmin />,
             path: "/product-admin",
           },
         ],

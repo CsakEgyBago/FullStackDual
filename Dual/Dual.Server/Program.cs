@@ -1,6 +1,8 @@
 
 using Dual.Server.Middleware;
 using Eszi.Demo.Database;
+using Mapster;
+using MapsterMapper;
 using Microsoft.EntityFrameworkCore;
 
 namespace Dual.Server
@@ -13,6 +15,10 @@ namespace Dual.Server
 
             // Add services to the container.
             builder.Services.AddAuthenticationServices(builder.Configuration);
+
+            MapsterConfigurator.Configure();
+            builder.Services.AddSingleton(TypeAdapterConfig.GlobalSettings);
+            builder.Services.AddScoped<IMapper, ServiceMapper>();
 
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
